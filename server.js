@@ -2,19 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const shows = require('./routes/shows');
-var mongo = require('mongodb');
-
-var Server = mongo.Server,
-    Db = mongo.Db,
-    BSON = mongo.BSONPure;
-
-var server = new Server('localhost', 27017, {auto_reconnect: true});
-db = new Db('telly', server, {safe: true});
-db.open(function(err, db) {
-  if(!err) {
-    console.log("Connected to 'showdb' database");
-  }
-})
 
 app.use(bodyParser.urlencoded({'extended': true}))
 app.set('view engine', 'ejs');
@@ -23,28 +10,5 @@ app.listen(3000, function() {
   console.log('listening on 3000')
 })
 
-app.get('/', (req,res) => {
-  db.collection('shows').find().toArray((err,results) => {
-    res.render('index.ejs', {shows: results})
-  })
-});
-
-app.get('/shows', (req, res) => {
-  db.collection('shows', function(err, collection) {
-    collection.find().toArray(function(err, items){
-      res.send(items)
-    })
-  });  
-});
-
-app.post('/shows', (req, res) => {
-  var show = req.body;
-  console.log('Adding Show: ' + JSON.stringify(show));
-  
-  db.collection('shows').save(show, {safe: true}, function(err, result) {
-    if (err) return console.log('An error has occurred');
-
-    console.log('Success: ' + JSON.stringify(result[0]));
-    res.redirect('/')
-  });
-});
+app.get('/',        shows.findAll);
+app.post('/shows',  shows.addShow);
