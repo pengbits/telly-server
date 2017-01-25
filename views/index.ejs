@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Telly</title>
+</head>
+<body>
+  <h1>Shows</h1>
+  <ul>
+  <% for(var i=0; i<shows.length; i++){ %>
+    <% var show = shows[i]; %>
+    <li>
+      <%= show.name %>
+    </li>
+  <% } %>
+  </ul>
+  
+  <h3>Add a show</h3>
+  <form action="/shows" method="POST">
+    <input type="text" placeholder="name" name="name">
+    <input type="text" placeholder="network" name="network">
+    <button type="submit">Submit</button>
+  </form>
+
+</body>
+</html>
+

@@ -17,13 +17,16 @@ db.open(function(err, db) {
 })
 
 app.use(bodyParser.urlencoded({'extended': true}))
+app.set('view engine', 'ejs');
 
 app.listen(3000, function() {
   console.log('listening on 3000')
 })
 
 app.get('/', (req,res) => {
-  res.sendFile(__dirname + '/index.html')
+  db.collection('shows').find().toArray((err,results) => {
+    res.render('index.ejs', {shows: results})
+  })
 });
 
 app.get('/shows', (req, res) => {
