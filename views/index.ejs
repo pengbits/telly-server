@@ -10,7 +10,7 @@
   <% for(var i=0; i<shows.length; i++){ %>
     <% var show = shows[i]; %>
     <li>
-      <%= show.name %>
+      <a href="/shows/<%= show._id %>"><%= show.name %></a>
     </li>
   <% } %>
   </ul>

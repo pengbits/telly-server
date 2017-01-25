@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= show.name %></title>
+</head>
+<body>
+  <h1>Show Details</h1>
+  <p>
+    <b>Name</b><br />
+    <%= show.name %>
+  </p>
+  <p>
+    <b>Network</b><br />
+    <%= show.network %>
+  </p>
+  <p>
+    <a href="/shows/<%= show._id %>/edit">Edit</a><br />
+    <a href="/shows">Back</a>
+  </p>
+</body>
+</html>
+

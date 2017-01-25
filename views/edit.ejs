@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Editing <%= show.name %></title>
+</head>
+<body>
+  <h1>Edit Show</h1>
+  <form action="/shows/<$= show._id %>" method="PUT">
+    <p>
+      <b>Name</b><br />
+      <input type="text" value="<%= show.name %>" name="name" />
+    </p>
+    <p>
+      <b>Network</b><br />
+      <input type="text" value="<%= show.network %>" name="network" />
+    </p>
+    <input type="submit" value="submit" />
+  </form>
+</body>
+</html>
+

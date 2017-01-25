@@ -10,5 +10,8 @@ app.listen(3000, function() {
   console.log('listening on 3000')
 })
 
-app.get('/',        shows.findAll);
-app.post('/shows',  shows.addShow);
+app.get('/',          shows.findAll);
+app.get('/shows',     shows.findAll);
+app.get('/shows/:id', shows.findById);
+app.get('/shows/(:id)/edit', shows.editShow);
+app.post('/shows',    shows.addShow);
