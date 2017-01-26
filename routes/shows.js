@@ -68,9 +68,10 @@ exports.addShow = (req, res) => {
 };
 
 exports.updateShow = (req,res) => {
+  var update = {};
   var id = req.params.id;
   var response = {};
-  var update = {};
+  console.log('Retrieving show: ' + id);
   
   db.collection('shows').findOne({
     '_id':BSON.ObjectID(id)
@@ -106,4 +107,31 @@ exports.updateShow = (req,res) => {
       })
     }
   });
+};
+
+
+exports.deleteShow = (req,res) => {
+  var id = req.params.id;
+  
+  try {
+    if(id == undefined) throw new Error('no id supplied');
+    
+    db.collection('shows').deleteOne({
+      "_id" : BSON.ObjectID(id)
+    })
+    .then((result) => {
+      console.log('promise resolved')
+      res.json({
+        'error' : false,
+        'message' : `Deleted record #${id} from database`
+      })
+    })
+    
+  } catch (e){
+    res.json({
+      'error' : true,
+      'message' : `Error deleting record #${id}`
+    })
+  }
+  
 };
