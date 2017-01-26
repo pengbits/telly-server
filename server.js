@@ -14,5 +14,5 @@ app.listen(3000, function() {
 app.get('/',          shows.findAll);
 app.get('/shows',     shows.findAll);
 app.get('/shows/:id', shows.findById);
-// app.get('/shows/(:id)/edit', shows.editShow);
-// app.post('/shows',    shows.addShow);
+app.post('/shows',    shows.addShow);
+app.put('/shows/:id', shows.updateShow);

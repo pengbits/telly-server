@@ -26,8 +26,8 @@ exports.findById = (req,res) => {
   db.collection('shows').findOne({
     '_id':BSON.ObjectID(id)
   }, 
-  function(err, item) {
-    if(err || item==null) {
+  function(err, show) {
+    if(err || show==null) {
       response = {
         'error' : true, 
         'message' : 'Error fetching data'
@@ -35,7 +35,7 @@ exports.findById = (req,res) => {
     } else {
       response = {
         'error' : false, 
-        'show' : item
+        'show' : show
       }
     }
     res.json(response)
@@ -64,5 +64,46 @@ exports.addShow = (req, res) => {
       };
     }
     res.json(response);
+  });
+};
+
+exports.updateShow = (req,res) => {
+  var id = req.params.id;
+  var response = {};
+  var update = {};
+  
+  db.collection('shows').findOne({
+    '_id':BSON.ObjectID(id)
+  }, 
+  function(err, show) {
+    if(err || show==null) {
+      response = {
+        'error' : true, 
+        'message' : 'Error fetching data'
+      };
+    } else {
+      Object.assign(update, {
+        "_id"     : id,
+        "name"    : (req.body.name || show.name),
+        "network" : (req.body.network || show.network),
+      })
+      db.collection('shows').save(update, (err) => {
+        if(err) {
+          response = {
+            'error' : true, 
+            'message' : 'Error fetching data'
+          };
+        }
+        else {
+          response = {
+            'error' : false,
+            'message' : 'Updated '+id+' successfully',
+            'show' : show
+          }
+        }
+        
+        res.json(response)
+      })
+    }
   });
 };
