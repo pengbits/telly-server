@@ -13,6 +13,7 @@ app.listen(3000, function() {
 })
 
 app.get('/',             shows.findAll);
+
 app.get('/shows',        shows.findAll);
 app.get('/shows/:id',    shows.findById);
 app.post('/shows',       shows.addShow);
@@ -20,3 +21,4 @@ app.put('/shows/:id',    shows.updateShow);
 app.delete('/shows/:id', shows.deleteShow);
 
 app.get('/networks',     networks.findAll)
+app.get('/networks/:id', networks.findById);
