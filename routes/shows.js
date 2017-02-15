@@ -12,6 +12,8 @@ db.open(function(err, db) {
   }
 })
 
+const SHOW_ATTRS = ['name','network'];
+
 exports.findAll = (req,res) => {
   db.collection('shows').find().toArray((err,results) => {
     res.json({shows: results})
@@ -44,11 +46,15 @@ exports.findById = (req,res) => {
 
 exports.addShow = (req, res) => {
 
-  var show = {};
-  var response = {};
-  show.name     = req.body.name;
-  show.network  = req.body.network;
-  console.log('Adding Show: ' + JSON.stringify(show));
+  let show = {};
+  let response = {};
+  let keyLength = 0;
+    
+  SHOW_ATTRS.map(k => {
+    if(req.body[k]){
+      show[k] = req.body[k]
+    } 
+  })
   
   db.collection('shows').save(show, {safe: true}, 
   function(err, result) {
@@ -60,22 +66,27 @@ exports.addShow = (req, res) => {
     } else {
       response = {
         'error' : false, 
-        'message' : 'Data added'
+        'message' : 'Data added',
+        'show' : show
       };
     }
+    console.log('response: '+JSON.stringify(response))
+    
     res.json(response);
-  });
-};
+  })
+}
 
 exports.updateShow = (req,res) => {
-  var update = {};
-  var id = req.params.id;
-  var response = {};
+  var update   = {}
+  var response = {}
+  var id       = req.params.id
+  var query    = {
+    '_id':BSON.ObjectID(id)
+  }
+  
   console.log('Retrieving show: ' + id);
   
-  db.collection('shows').findOne({
-    '_id':BSON.ObjectID(id)
-  }, 
+  db.collection('shows').findOne(query, 
   function(err, show) {
     if(err || show==null) {
       response = {
@@ -84,11 +95,17 @@ exports.updateShow = (req,res) => {
       };
     } else {
       Object.assign(update, {
-        "_id"     : id,
         "name"    : (req.body.name || show.name),
         "network" : (req.body.network || show.network),
       })
-      db.collection('shows').save(update, (err) => {
+      
+      console.log(`
+        update:
+          ${JSON.stringify(query)}
+          ${JSON.stringify(update)}
+      `)
+      
+      db.collection('shows').update(query, update, (err) => {
         if(err) {
           response = {
             'error' : true, 
@@ -99,7 +116,9 @@ exports.updateShow = (req,res) => {
           response = {
             'error' : false,
             'message' : 'Updated '+id+' successfully',
-            'show' : show
+            'show' : Object.assign({
+              '_id' : id
+            }, update)
           }
         }
         
@@ -120,17 +139,20 @@ exports.deleteShow = (req,res) => {
       "_id" : BSON.ObjectID(id)
     })
     .then((result) => {
-      console.log('promise resolved')
       res.json({
         'error' : false,
-        'message' : `Deleted record #${id} from database`
+        'message' : `Deleted record #${id} from database`,
+        'show' : {
+          '_id' : id
+        }
       })
     })
     
   } catch (e){
     res.json({
       'error' : true,
-      'message' : `Error deleting record #${id}`
+      'message' : `Error deleting record #${id}`,
+      'show' : {}
     })
   }
   
