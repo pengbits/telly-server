@@ -33,8 +33,7 @@ exports.findById = (req,res) => {
   });
 };
 
-exports.addShow = (req, res) => {
-
+exports.add = (req, res) => {
   var show = {};
   var response = {};
   show.name     = req.body.name;
@@ -58,7 +57,7 @@ exports.addShow = (req, res) => {
   });
 };
 
-exports.updateShow = (req,res) => {
+exports.update = (req,res) => {
   var update = {};
   var id = req.params.id;
   var response = {};
@@ -101,7 +100,7 @@ exports.updateShow = (req,res) => {
 };
 
 
-exports.deleteShow = (req,res) => {
+exports.delete = (req,res) => {
   var id = req.params.id;
   
   try {

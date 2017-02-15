@@ -11,7 +11,6 @@ class Connection {
       instance = this;
     }
     
-    this.time = new Date();
     this.connect();
     return this;
   }

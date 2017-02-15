@@ -22,9 +22,10 @@ app.get('/',             shows.findAll);
 
 app.get('/shows',        shows.findAll);
 app.get('/shows/:id',    shows.findById);
-app.post('/shows',       shows.addShow);
-app.put('/shows/:id',    shows.updateShow);
-app.delete('/shows/:id', shows.deleteShow);
+app.post('/shows',       shows.add);
+app.put('/shows/:id',    shows.update);
+app.delete('/shows/:id', shows.delete);
 
 app.get('/networks',     networks.findAll)
 app.get('/networks/:id', networks.findById);
+app.post('/networks',    networks.add)
