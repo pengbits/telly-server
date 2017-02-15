@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const shows = require('./routes/shows');
+const networks = require('./routes/networks');
 const router = express.Router();
 
 app.use(bodyParser.json());
@@ -17,3 +18,5 @@ app.get('/shows/:id',    shows.findById);
 app.post('/shows',       shows.addShow);
 app.put('/shows/:id',    shows.updateShow);
 app.delete('/shows/:id', shows.deleteShow);
+
+app.get('/networks',     networks.findAll)

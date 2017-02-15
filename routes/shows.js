@@ -1,16 +1,7 @@
 var mongo = require('mongodb');
-var Server = mongo.Server;
-var Db = mongo.Db;
-var BSON = require('bson');
-
-var server = new Server('localhost', 27017, {auto_reconnect: true});
-db = new Db('telly', server, {safe: true});
-
-db.open(function(err, db) {
-  if(!err) {
-    console.log("Connected to 'showdb' database");
-  }
-})
+var BSON =  require('bson');
+var {Connection} = require('./connection');
+var db = new Connection().db; 
 
 exports.findAll = (req,res) => {
   db.collection('shows').find().toArray((err,results) => {
