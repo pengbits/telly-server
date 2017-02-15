@@ -4,21 +4,22 @@ var {Connection} = require('./connection');
 var db = new Connection().db; 
 
 exports.findAll = (req,res) => {
-  db.collection('shows').find().toArray((err,results) => {
-    res.json({shows: results})
+  db.collection('networks').find().toArray((err,results) => {
+    res.json({networks: results})
   })
 };
 
 exports.findById = (req,res) => {
   var id = req.params.id;
   var response = {};
-  console.log('Retrieving show: ' + id);
+  console.log('Retrieving network: ' + id);
   
-  db.collection('shows').findOne({
+  db.collection('networks').findOne({
     '_id':BSON.ObjectID(id)
   }, 
-  function(err, show) {
-    if(err || show==null) {
+  
+  function(err, network) {
+    if(err || network==null) {
       response = {
         'error' : true, 
         'message' : 'Error fetching data'
@@ -26,7 +27,7 @@ exports.findById = (req,res) => {
     } else {
       response = {
         'error' : false, 
-        'show' : show
+        'network' : network
       }
     }
     res.json(response)
@@ -34,13 +35,13 @@ exports.findById = (req,res) => {
 };
 
 exports.add = (req, res) => {
-  var show = {};
+  var network = {};
   var response = {};
-  show.name     = req.body.name;
-  show.network  = req.body.network;
-  console.log('Adding Show: ' + JSON.stringify(show));
+  network.name     = req.body.name;
+  network.country  = req.body.country;
+  console.log('Adding Network: ' + JSON.stringify(network));
   
-  db.collection('shows').save(show, {safe: true}, 
+  db.collection('networks').save(network, {safe: true}, 
   function(err, result) {
     if(err) {
       response = {
@@ -61,13 +62,13 @@ exports.update = (req,res) => {
   var update = {};
   var id = req.params.id;
   var response = {};
-  console.log('Retrieving show: ' + id);
+  console.log('Retrieving network: ' + id);
   
-  db.collection('shows').findOne({
+  db.collection('networks').findOne({
     '_id':BSON.ObjectID(id)
   }, 
-  function(err, show) {
-    if(err || show==null) {
+  function(err, network) {
+    if(err || network==null) {
       response = {
         'error' : true, 
         'message' : 'Error fetching data'
@@ -75,10 +76,10 @@ exports.update = (req,res) => {
     } else {
       Object.assign(update, {
         "_id"     : id,
-        "name"    : (req.body.name || show.name),
-        "network" : (req.body.network || show.network),
+        "name"    : (req.body.name || network.name),
+        "country" : (req.body.country || network.country),
       })
-      db.collection('shows').save(update, (err) => {
+      db.collection('networks').save(update, (err) => {
         if(err) {
           response = {
             'error' : true, 
@@ -89,7 +90,7 @@ exports.update = (req,res) => {
           response = {
             'error' : false,
             'message' : 'Updated '+id+' successfully',
-            'show' : show
+            'network' : network
           }
         }
         
@@ -106,11 +107,10 @@ exports.delete = (req,res) => {
   try {
     if(id == undefined) throw new Error('no id supplied');
     
-    db.collection('shows').deleteOne({
+    db.collection('networks').deleteOne({
       "_id" : BSON.ObjectID(id)
     })
     .then((result) => {
-      console.log('promise resolved')
       res.json({
         'error' : false,
         'message' : `Deleted record #${id} from database`
@@ -123,5 +123,4 @@ exports.delete = (req,res) => {
       'message' : `Error deleting record #${id}`
     })
   }
-  
-};
+}
