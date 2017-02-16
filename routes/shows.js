@@ -4,9 +4,20 @@ var {Connection} = require('./connection');
 var db = new Connection().db; 
 
 exports.findAll = (req,res) => {
-  db.collection('shows').find().toArray((err,results) => {
+  // db.collection('shows').find().toArray((err,results) => {
+  //   res.json({shows: results})
+  // })
+  db.collection('shows').aggregate([{
+    $lookup: {
+      from:'networks', 
+      localField:'networkId', 
+      foreignField: '_id', 
+      as:'network'}
+    }
+  ]).toArray((err,results) => {
     res.json({shows: results})
   })
+
 };
 
 exports.findById = (req,res) => {
