@@ -25,9 +25,18 @@ exports.findById = (req,res) => {
   var response = {};
   console.log('Retrieving show: ' + id);
   
-  db.collection('shows').findOne({
-    '_id':BSON.ObjectID(id)
-  }, 
+  db.collection('shows').aggregate([{
+    $lookup: {
+      from:'networks',
+      localField:'networkId',
+      foreignField:'_id',
+      as:'network'
+    }
+  },{
+    $match:{
+      _id: BSON.ObjectId("58a5d386a8c54c2dbb5a9037")
+    }
+  }],
   function(err, show) {
     if(err || show==null) {
       response = {
@@ -47,8 +56,9 @@ exports.findById = (req,res) => {
 exports.add = (req, res) => {
   var show = {};
   var response = {};
-  show.name     = req.body.name;
-  show.network  = req.body.network;
+  show.name         = req.body.name;
+  show.networkId    = req.body.networkId;
+  show.networkName  = req.body.networkName;
   console.log('Adding Show: ' + JSON.stringify(show));
   
   db.collection('shows').save(show, {safe: true}, 
@@ -85,9 +95,9 @@ exports.update = (req,res) => {
       };
     } else {
       Object.assign(update, {
-        "_id"     : id,
-        "name"    : (req.body.name || show.name),
-        "network" : (req.body.network || show.network),
+        "_id"         : id,
+        "name"        : (req.body.name || show.name),
+        "networkId"   : (req.body.networkId || show.networkId)
       })
       db.collection('shows').save(update, (err) => {
         if(err) {

@@ -72,7 +72,8 @@ exports.update = (req,res) => {
       response = {
         'error' : true, 
         'message' : 'Error fetching data'
-      };
+      }
+      res.json(response)
     } else {
       Object.assign(update, {
         "_id"     : id,
