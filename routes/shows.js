@@ -71,8 +71,6 @@ exports.add = (req, res) => {
   var response = {};
   show.name         = req.body.name;
   show.networkId    = req.body.networkId;
-  // show.networkName  = req.body.networkName;
-  console.log('Adding Show: ' + JSON.stringify(show));
   
   db.collection('shows').save(show, {safe: true}, 
   function(err, result) {
