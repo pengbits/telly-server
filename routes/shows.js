@@ -15,7 +15,15 @@ exports.findAll = (req,res) => {
       as:'network'}
     }
   ]).toArray((err,results) => {
-    res.json({shows: results})
+    res.json({
+      "shows": results.map((s) => {
+        return {
+          '_id'  : s._id,
+          'name' : s.name,
+          'network' : s.network.length ? s.network[0] : null
+        }
+      })
+    })
   })
 
 };
@@ -50,7 +58,7 @@ exports.findById = (req,res) => {
         'show' : Object.assign({
           '_id'  : show._id,
           'name' : show.name,
-          'network' : show.network
+          'network' : show.network.length ? show.network[0] : null
         })
       }
     }
@@ -101,15 +109,24 @@ exports.update = (req,res) => {
       res.json(response)
     } else {
       Object.assign(update, {
-        "_id"         : id,
         "name"        : (req.body.name || show.name),
         "networkId"   : (req.body.networkId || show.networkId)
-      })
-      db.collection('shows').save(update, (err) => {
+      });
+      
+      console.log(`
+        update: ${JSON.stringify(update)}
+      `);
+      
+      db.collection('shows').update({
+        "_id": BSON.ObjectID(id)
+      },{
+        $set: update
+      },(err,result) => {
+
         if(err) {
           response = {
             'error' : true, 
-            'message' : 'Error fetching data'
+            'message' : 'Error updating data'
           };
         }
         else {
