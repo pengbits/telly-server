@@ -37,16 +37,21 @@ exports.findById = (req,res) => {
       _id: BSON.ObjectId("58a5d386a8c54c2dbb5a9037")
     }
   }],
-  function(err, show) {
-    if(err || show==null) {
+  function(err, results) {
+    if(err || results.length == 0) {
       response = {
         'error' : true, 
         'message' : 'Error fetching data'
       };
     } else {
+      var show = results[0]
       response = {
         'error' : false, 
-        'show' : show
+        'show' : Object.assign({
+          '_id'  : show._id,
+          'name' : show.name,
+          'network' : show.network
+        })
       }
     }
     res.json(response)
@@ -58,7 +63,7 @@ exports.add = (req, res) => {
   var response = {};
   show.name         = req.body.name;
   show.networkId    = req.body.networkId;
-  show.networkName  = req.body.networkName;
+  // show.networkName  = req.body.networkName;
   console.log('Adding Show: ' + JSON.stringify(show));
   
   db.collection('shows').save(show, {safe: true}, 
@@ -93,6 +98,7 @@ exports.update = (req,res) => {
         'error' : true, 
         'message' : 'Error fetching data'
       };
+      res.json(response)
     } else {
       Object.assign(update, {
         "_id"         : id,
@@ -110,7 +116,7 @@ exports.update = (req,res) => {
           response = {
             'error' : false,
             'message' : 'Updated '+id+' successfully',
-            'show' : show
+            'show' : update
           }
         }
         
