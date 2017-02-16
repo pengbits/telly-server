@@ -72,14 +72,24 @@ exports.update = (req,res) => {
       response = {
         'error' : true, 
         'message' : 'Error fetching data'
-      };
+      }
+      res.json(response)
     } else {
       Object.assign(update, {
-        "_id"     : id,
         "name"    : (req.body.name || network.name),
         "country" : (req.body.country || network.country),
       })
-      db.collection('networks').save(update, (err) => {
+      
+      console.log(`
+        update: ${JSON.stringify(update)}
+      `);
+      
+      db.collection('networks').update({
+        '_id':BSON.ObjectID(id)
+      },{
+        $set: update
+      },
+      (err) => {
         if(err) {
           response = {
             'error' : true, 
@@ -90,7 +100,7 @@ exports.update = (req,res) => {
           response = {
             'error' : false,
             'message' : 'Updated '+id+' successfully',
-            'network' : network
+            'network' : update
           }
         }
         

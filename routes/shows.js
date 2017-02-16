@@ -4,9 +4,28 @@ var {Connection} = require('./connection');
 var db = new Connection().db; 
 
 exports.findAll = (req,res) => {
-  db.collection('shows').find().toArray((err,results) => {
-    res.json({shows: results})
+  // db.collection('shows').find().toArray((err,results) => {
+  //   res.json({shows: results})
+  // })
+  db.collection('shows').aggregate([{
+    $lookup: {
+      from:'networks', 
+      localField:'networkId', 
+      foreignField: '_id', 
+      as:'network'}
+    }
+  ]).toArray((err,results) => {
+    res.json({
+      "shows": results.map((s) => {
+        return {
+          '_id'  : s._id,
+          'name' : s.name,
+          'network' : s.network.length ? s.network[0] : null
+        }
+      })
+    })
   })
+
 };
 
 exports.findById = (req,res) => {
@@ -14,19 +33,33 @@ exports.findById = (req,res) => {
   var response = {};
   console.log('Retrieving show: ' + id);
   
-  db.collection('shows').findOne({
-    '_id':BSON.ObjectID(id)
-  }, 
-  function(err, show) {
-    if(err || show==null) {
+  db.collection('shows').aggregate([{
+    $lookup: {
+      from:'networks',
+      localField:'networkId',
+      foreignField:'_id',
+      as:'network'
+    }
+  },{
+    $match:{
+      _id: BSON.ObjectId("58a5d386a8c54c2dbb5a9037")
+    }
+  }],
+  function(err, results) {
+    if(err || results.length == 0) {
       response = {
         'error' : true, 
         'message' : 'Error fetching data'
       };
     } else {
+      var show = results[0]
       response = {
         'error' : false, 
-        'show' : show
+        'show' : Object.assign({
+          '_id'  : show._id,
+          'name' : show.name,
+          'network' : show.network.length ? show.network[0] : null
+        })
       }
     }
     res.json(response)
@@ -36,9 +69,8 @@ exports.findById = (req,res) => {
 exports.add = (req, res) => {
   var show = {};
   var response = {};
-  show.name     = req.body.name;
-  show.network  = req.body.network;
-  console.log('Adding Show: ' + JSON.stringify(show));
+  show.name         = req.body.name;
+  show.networkId    = req.body.networkId;
   
   db.collection('shows').save(show, {safe: true}, 
   function(err, result) {
@@ -72,24 +104,34 @@ exports.update = (req,res) => {
         'error' : true, 
         'message' : 'Error fetching data'
       };
+      res.json(response)
     } else {
       Object.assign(update, {
-        "_id"     : id,
-        "name"    : (req.body.name || show.name),
-        "network" : (req.body.network || show.network),
-      })
-      db.collection('shows').save(update, (err) => {
+        "name"        : (req.body.name || show.name),
+        "networkId"   : (req.body.networkId || show.networkId)
+      });
+      
+      console.log(`
+        update: ${JSON.stringify(update)}
+      `);
+      
+      db.collection('shows').update({
+        "_id": BSON.ObjectID(id)
+      },{
+        $set: update
+      },(err,result) => {
+
         if(err) {
           response = {
             'error' : true, 
-            'message' : 'Error fetching data'
+            'message' : 'Error updating data'
           };
         }
         else {
           response = {
             'error' : false,
             'message' : 'Updated '+id+' successfully',
-            'show' : show
+            'show' : update
           }
         }
         
