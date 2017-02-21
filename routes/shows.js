@@ -34,12 +34,25 @@ exports.findById = (req,res) => {
   });
 };
 
-exports.add = (req, res) => {
+const SHOW_ATTRS = {
+  'name':null,
+  'network':null,
+  'status':null
+}
 
-  var show = {};
+getAttrs = (source={}, defaults={}) => {
+  let key,val; 
+  let attrs = {};
+  for(key in SHOW_ATTRS){
+    attrs[key] = source[key] || defaults[key]
+  }
+  return attrs
+}
+
+
+exports.add = (req, res) => {
   var response = {};
-  show.name     = req.body.name;
-  show.network  = req.body.network;
+  var show     = getAttrs(req.body);
   console.log('Adding Show: ' + JSON.stringify(show));
   
   db.collection('shows').save(show, {safe: true}, 
@@ -60,9 +73,9 @@ exports.add = (req, res) => {
 };
 
 exports.update = (req,res) => {
-  var update = {};
-  var id = req.params.id;
   var response = {};
+  var update   = {};
+  var id       = req.params.id;
   console.log('Retrieving show: ' + id);
   
   db.collection('shows').findOne({
@@ -75,11 +88,10 @@ exports.update = (req,res) => {
         'message' : 'Error fetching data'
       };
     } else {
-      Object.assign(update, {
-        "_id"     : BSON.ObjectID(id),
-        "name"    : (req.body.name || show.name),
-        "network" : (req.body.network || show.network),
-      })
+      
+      update        = getAttrs(req.body, show);
+      update['_id'] = BSON.ObjectID(id);
+
       db.collection('shows').save(update, (err) => {
         if(err) {
           response = {
