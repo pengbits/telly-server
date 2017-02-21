@@ -18,6 +18,7 @@ exports.findById = (req,res) => {
     '_id':BSON.ObjectID(id)
   }, 
   function(err, show) {
+    console.log(show)
     if(err || show==null) {
       response = {
         'error' : true, 
@@ -75,7 +76,6 @@ exports.updateShow = (req,res) => {
       };
     } else {
       Object.assign(update, {
-        "_id"     : id,
         "name"    : (req.body.name || show.name),
         "network" : (req.body.network || show.network),
       })
@@ -90,7 +90,9 @@ exports.updateShow = (req,res) => {
           response = {
             'error' : false,
             'message' : 'Updated '+id+' successfully',
-            'show' : show
+            'show' : Object.assign({
+              '_id' : id
+            }, update)
           }
         }
         
@@ -111,10 +113,13 @@ exports.deleteShow = (req,res) => {
       "_id" : BSON.ObjectID(id)
     })
     .then((result) => {
-      console.log('promise resolved')
+      console.log('promise resolved')   
       res.json({
         'error' : false,
-        'message' : `Deleted record #${id} from database`
+        'message' : `Deleted record #${id} from database`,
+        'show': {
+          '_id' : id
+        }
       })
     })
     
