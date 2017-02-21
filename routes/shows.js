@@ -76,6 +76,7 @@ exports.updateShow = (req,res) => {
       };
     } else {
       Object.assign(update, {
+        "_id"     : BSON.ObjectID(id),
         "name"    : (req.body.name || show.name),
         "network" : (req.body.network || show.network),
       })
@@ -90,9 +91,7 @@ exports.updateShow = (req,res) => {
           response = {
             'error' : false,
             'message' : 'Updated '+id+' successfully',
-            'show' : Object.assign({
-              '_id' : id
-            }, update)
+            'show' : update
           }
         }
         
