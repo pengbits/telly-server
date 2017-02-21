@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const shows = require('./routes/shows');
-const networks = require('./routes/networks');
 const router = express.Router();
 
 app.use(bodyParser.json());
@@ -19,15 +18,8 @@ app.listen(3000, function() {
 })
 
 app.get('/',                shows.findAll);
-
 app.get('/shows',           shows.findAll);
 app.get('/shows/:id',       shows.findById);
 app.post('/shows',          shows.add);
 app.put('/shows/:id',       shows.update);
 app.delete('/shows/:id',    shows.delete);
-
-app.get('/networks',        networks.findAll)
-app.get('/networks/:id',    networks.findById);
-app.post('/networks',       networks.add)
-app.put('/networks/:id',    networks.update);
-app.delete('/networks/:id', networks.delete);
