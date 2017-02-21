@@ -3,6 +3,63 @@ var BSON =  require('bson');
 var {Connection} = require('./connection');
 var db = new Connection().db; 
 
+const show_attrs = {
+  'name':null,
+  'network':null,
+  'status':null
+}
+
+const getAttrs = (source={}, defaults={}) => {
+  let key,val; 
+  let attrs = {};
+  for(key in show_attrs){
+    attrs[key] = source[key] || defaults[key]
+  }
+  return attrs
+}
+
+const feedback = {
+  'GET' :    {
+    'success' : `Retreived show successfully`,
+    'error' : `There was no record with that id.`
+  },
+  'CREATE' : {
+    'success' : `Created a new Show`,
+    'error' : `There was an error, your Show could not be saved.`
+  },
+  'UPDATE' : {
+    'success' : `Saved changes to Show`,
+    'error' : `There was an error, and your updates could not be saved.`
+  },
+  'DELETE' : {
+    'success' : `Deleted show successfully`,
+    'error' : `There was an error, and your Show could not be deleted.`
+  }
+}
+
+const getMessage = (method,success) => {
+  const entry  = feedback[method];
+  return success ? entry.success : entry.error
+}
+
+const getResponse = (method,success) => {
+  return {
+    'error'   : !success,
+    'message' : getMessage(method, success)
+  }
+} 
+
+const handleResponse = (responder, method, store, meta) => {
+  return (error, result) => {
+    let response = getResponse(method, !error)
+    if(!error && store){
+      response[store] = Object.assign({}, result, (meta || {}))
+    }
+    console.log(JSON.stringify(response))
+    responder.json(response)
+  }
+}
+
 exports.findAll = (req,res) => {
   db.collection('shows').find().toArray((err,results) => {
     res.json({shows: results})
@@ -15,39 +72,12 @@ exports.findById = (req,res) => {
   console.log('Retrieving show: ' + id);
   
   db.collection('shows').findOne({
-    '_id':BSON.ObjectID(id)
-  }, 
-  function(err, show) {
-    console.log(show)
-    if(err || show==null) {
-      response = {
-        'error' : true, 
-        'message' : 'Error fetching data'
-      };
-    } else {
-      response = {
-        'error' : false, 
-        'show' : show
-      }
-    }
-    res.json(response)
-  });
+      '_id':BSON.ObjectID(id)
+    }, 
+    handleResponse(res, 'GET', 'show')
+  )
 };
 
-const SHOW_ATTRS = {
-  'name':null,
-  'network':null,
-  'status':null
-}
-
-getAttrs = (source={}, defaults={}) => {
-  let key,val; 
-  let attrs = {};
-  for(key in SHOW_ATTRS){
-    attrs[key] = source[key] || defaults[key]
-  }
-  return attrs
-}
 
 
 exports.add = (req, res) => {
@@ -55,21 +85,10 @@ exports.add = (req, res) => {
   var show     = getAttrs(req.body);
   console.log('Adding Show: ' + JSON.stringify(show));
   
-  db.collection('shows').save(show, {safe: true}, 
-  function(err, result) {
-    if(err) {
-      response = {
-        'error' : true, 
-        'message' : 'Error adding data'
-      };
-    } else {
-      response = {
-        'error' : false, 
-        'message' : 'Data added'
-      };
-    }
-    res.json(response);
-  });
+  db.collection('shows').save(show, 
+    {safe: true}, 
+    handleResponse(res, 'CREATE')
+  );
 };
 
 exports.update = (req,res) => {
@@ -83,30 +102,19 @@ exports.update = (req,res) => {
   }, 
   function(err, show) {
     if(err || show==null) {
-      response = {
-        'error' : true, 
-        'message' : 'Error fetching data'
-      };
-    } else {
-      
+      response = getResponse('UPDATE', false)
+    } 
+    else 
+    {
       update        = getAttrs(req.body, show);
       update['_id'] = BSON.ObjectID(id);
 
       db.collection('shows').save(update, (err) => {
-        if(err) {
-          response = {
-            'error' : true, 
-            'message' : 'Error fetching data'
-          };
+        response = getResponse('UPDATE', !err)
+        if(!err){
+          response.show = update
         }
-        else {
-          response = {
-            'error' : false,
-            'message' : 'Updated '+id+' successfully',
-            'show' : update
-          }
-        }
-        
+        console.log(JSON.stringify(response))
         res.json(response)
       })
     }
