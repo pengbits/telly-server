@@ -85,8 +85,7 @@ exports.add = (req, res) => {
   var show     = getAttrs(req.body);
   console.log('Adding Show: ' + JSON.stringify(show));
   
-  db.collection('shows').save(show, 
-    {safe: true}, 
+  db.collection('shows').save(show, {safe: true}, 
     handleResponse(res, 'CREATE')
   );
 };
@@ -111,9 +110,8 @@ exports.update = (req,res) => {
 
       db.collection('shows').save(update, (err) => {
         response = getResponse('UPDATE', !err)
-        if(!err){
-          response.show = update
-        }
+        if(!err)   response.show = update;
+
         console.log(JSON.stringify(response))
         res.json(response)
       })
@@ -132,7 +130,7 @@ exports.delete = (req,res) => {
       "_id" : BSON.ObjectID(id)
     })
     .then((result) => {
-      console.log('promise resolved')   
+
       res.json({
         'error' : false,
         'message' : `Deleted record #${id} from database`,
