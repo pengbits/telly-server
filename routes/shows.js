@@ -1,18 +1,64 @@
 var mongo = require('mongodb');
-var Server = mongo.Server;
-var Db = mongo.Db;
-var BSON = require('bson');
+var BSON =  require('bson');
+var {Connection} = require('./connection');
+var db = new Connection().db; 
 
-var server = new Server('localhost', 27017, {auto_reconnect: true});
-db = new Db('telly', server, {safe: true});
+const show_attrs = {
+  'name':null,
+  'network':null,
+  'status':null
+}
 
-db.open(function(err, db) {
-  if(!err) {
-    console.log("Connected to 'showdb' database");
+const getAttrs = (source={}, defaults={}) => {
+  let key,val; 
+  let attrs = {};
+  for(key in show_attrs){
+    attrs[key] = source[key] || defaults[key]
   }
-})
+  return attrs
+}
 
-const SHOW_ATTRS = ['name','network'];
+const feedback = {
+  'GET' :    {
+    'success' : `Retreived show successfully`,
+    'error' : `There was no record with that id.`
+  },
+  'CREATE' : {
+    'success' : `Created a new Show`,
+    'error' : `There was an error, your Show could not be saved.`
+  },
+  'UPDATE' : {
+    'success' : `Saved changes to Show`,
+    'error' : `There was an error, and your updates could not be saved.`
+  },
+  'DELETE' : {
+    'success' : `Deleted show successfully`,
+    'error' : `There was an error, and your Show could not be deleted.`
+  }
+}
+
+const getMessage = (method,success) => {
+  const entry  = feedback[method];
+  return success ? entry.success : entry.error
+}
+
+const getResponse = (method,success) => {
+  return {
+    'error'   : !success,
+    'message' : getMessage(method, success)
+  }
+} 
+
+const handleResponse = (responder, method, store, meta) => {
+  return (error, result) => {
+    let response = getResponse(method, !error)
+    if(!error && store){
+      response[store] = Object.assign({}, result, (meta || {}))
+    }
+    console.log(JSON.stringify(response))
+    responder.json(response)
+  }
+}
 
 exports.findAll = (req,res) => {
   db.collection('shows').find().toArray((err,results) => {
@@ -26,102 +72,47 @@ exports.findById = (req,res) => {
   console.log('Retrieving show: ' + id);
   
   db.collection('shows').findOne({
+      '_id':BSON.ObjectID(id)
+    }, 
+    handleResponse(res, 'GET', 'show')
+  )
+};
+
+
+
+exports.add = (req, res) => {
+  var response = {};
+  var show     = getAttrs(req.body);
+  console.log('Adding Show: ' + JSON.stringify(show));
+  
+  db.collection('shows').save(show, {safe: true}, 
+    handleResponse(res, 'CREATE')
+  );
+};
+
+exports.update = (req,res) => {
+  var response = {};
+  var update   = {};
+  var id       = req.params.id;
+  console.log('Retrieving show: ' + id);
+  
+  db.collection('shows').findOne({
     '_id':BSON.ObjectID(id)
   }, 
   function(err, show) {
     if(err || show==null) {
-      response = {
-        'error' : true, 
-        'message' : 'Error fetching data'
-      };
-    } else {
-      response = {
-        'error' : false, 
-        'show' : show
-      }
-    }
-    res.json(response)
-  });
-};
-
-exports.addShow = (req, res) => {
-
-  let show = {};
-  let response = {};
-  let keyLength = 0;
-    
-  SHOW_ATTRS.map(k => {
-    if(req.body[k]){
-      show[k] = req.body[k]
+      response = getResponse('UPDATE', false)
     } 
-  })
-  
-  db.collection('shows').save(show, {safe: true}, 
-  function(err, result) {
-    if(err) {
-      response = {
-        'error' : true, 
-        'message' : 'Error adding data'
-      };
-    } else {
-      response = {
-        'error' : false, 
-        'message' : 'Data added',
-        'show' : show
-      };
-    }
-    console.log('response: '+JSON.stringify(response))
-    
-    res.json(response);
-  })
-}
+    else 
+    {
+      update        = getAttrs(req.body, show);
+      update['_id'] = BSON.ObjectID(id);
 
-exports.updateShow = (req,res) => {
-  var update   = {}
-  var response = {}
-  var id       = req.params.id
-  var query    = {
-    '_id':BSON.ObjectID(id)
-  }
-  
-  console.log('Retrieving show: ' + id);
-  
-  db.collection('shows').findOne(query, 
-  function(err, show) {
-    if(err || show==null) {
-      response = {
-        'error' : true, 
-        'message' : 'Error fetching data'
-      };
-    } else {
-      Object.assign(update, {
-        "name"    : (req.body.name || show.name),
-        "network" : (req.body.network || show.network),
-      })
-      
-      console.log(`
-        update:
-          ${JSON.stringify(query)}
-          ${JSON.stringify(update)}
-      `)
-      
-      db.collection('shows').update(query, update, (err) => {
-        if(err) {
-          response = {
-            'error' : true, 
-            'message' : 'Error fetching data'
-          };
-        }
-        else {
-          response = {
-            'error' : false,
-            'message' : 'Updated '+id+' successfully',
-            'show' : Object.assign({
-              '_id' : id
-            }, update)
-          }
-        }
-        
+      db.collection('shows').save(update, (err) => {
+        response = getResponse('UPDATE', !err)
+        if(!err)   response.show = update;
+
+        console.log(JSON.stringify(response))
         res.json(response)
       })
     }
@@ -129,7 +120,7 @@ exports.updateShow = (req,res) => {
 };
 
 
-exports.deleteShow = (req,res) => {
+exports.delete = (req,res) => {
   var id = req.params.id;
   
   try {
@@ -139,10 +130,11 @@ exports.deleteShow = (req,res) => {
       "_id" : BSON.ObjectID(id)
     })
     .then((result) => {
+
       res.json({
         'error' : false,
         'message' : `Deleted record #${id} from database`,
-        'show' : {
+        'show': {
           '_id' : id
         }
       })
@@ -151,8 +143,7 @@ exports.deleteShow = (req,res) => {
   } catch (e){
     res.json({
       'error' : true,
-      'message' : `Error deleting record #${id}`,
-      'show' : {}
+      'message' : `Error deleting record #${id}`
     })
   }
   

@@ -1,10 +1,11 @@
 {
   "name": "telly-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server.js",
+    "develop": "nodemon server.js",
     "db:start": "mongod --dbpath ./data",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
